@@ -265,7 +265,7 @@
   .cf-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 
   /* ===== MUSIC ===== */
-  #win-music { width:340px; height:360px; top:80px; left:500px; }
+  #win-music { width:340px; height:420px; top:80px; left:500px; }
   .music-body { padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; }
   .music-cover { width:140px; height:140px; border-radius:12px; background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460); display:flex; align-items:center; justify-content:center; font-size:3rem; box-shadow:0 20px 40px rgba(0,0,0,0.5); }
   .music-spinning { animation:spin 4s linear infinite; animation-play-state:paused; }
@@ -273,7 +273,7 @@
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .music-track { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; text-align:center; }
   .music-artist { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--text3); margin-top:3px; text-align:center; }
-  .music-progress { width:100%; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .music-progress { width:100%; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; cursor:pointer; }
   .music-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; width:0%; transition:width 0.5s linear; }
   .music-times { display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); margin-top:4px; width:100%; }
   .music-controls { display:flex; align-items:center; gap:16px; }
@@ -281,6 +281,10 @@
   .mc-btn:hover { color:var(--text); transform:scale(1.15); }
   .mc-play { width:44px; height:44px; border-radius:50%; background:var(--accent); color:#000; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; box-shadow:0 0 20px rgba(0,255,136,0.4); transition:all 0.2s; }
   .mc-play:hover { transform:scale(1.1); box-shadow:0 0 30px rgba(0,255,136,0.6); }
+  .music-queue { width:100%; display:flex; flex-direction:column; gap:6px; max-height:90px; overflow:auto; }
+  .music-item { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 10px; text-align:left; cursor:pointer; transition:all 0.15s; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text2); }
+  .music-item:hover { border-color:var(--accent2); color:var(--text); }
+  .music-item.active { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.08); }
 
   /* ===== FILES ===== */
   #win-files { width:500px; height:380px; top:100px; left:180px; }
@@ -296,6 +300,45 @@
   .file-item:hover { background:var(--surface2); border-color:var(--border); }
   .file-icon { font-size:2rem; }
   .file-name { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text2); text-align:center; }
+
+  /* ===== RESUME & DOCS ===== */
+  #win-resume { width:680px; height:520px; top:70px; left:220px; }
+  #win-certificates { width:420px; height:340px; top:130px; left:260px; }
+  #win-notes { width:380px; height:300px; top:150px; left:320px; }
+  #win-gallery { width:520px; height:380px; top:120px; left:260px; }
+  .resume-body { padding:22px; display:flex; flex-direction:column; gap:16px; }
+  .resume-header { display:flex; flex-direction:column; gap:6px; }
+  .resume-name { font-size:1.45rem; font-weight:800; letter-spacing:0.5px; }
+  .resume-subtitle { font-size:0.82rem; color:var(--text2); }
+  .resume-meta { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); letter-spacing:1px; text-transform:uppercase; }
+  .resume-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .resume-btn { font-family:'JetBrains Mono',monospace; font-size:0.62rem; letter-spacing:1px; text-transform:uppercase; padding:8px 12px; border-radius:8px; border:1px solid transparent; background:linear-gradient(135deg,var(--accent),#00cc66); color:#000; text-decoration:none; transition:all 0.2s; }
+  .resume-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,255,136,0.25); }
+  .resume-btn.ghost { background:transparent; color:var(--text2); border-color:var(--border); }
+  .resume-btn.ghost:hover { color:var(--text); border-color:var(--accent2); box-shadow:none; }
+  .resume-section { border-top:1px solid var(--border); padding-top:12px; }
+  .resume-title { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+  .resume-text { font-size:0.78rem; color:var(--text2); line-height:1.6; }
+  .resume-item { margin-bottom:10px; }
+  .resume-item-title { font-size:0.85rem; font-weight:700; }
+  .resume-item-meta { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); margin-top:3px; }
+  .resume-skill-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .resume-skill-group { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+  .resume-skill-label { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+  .resume-skill-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .resume-skill-tag { font-family:'JetBrains Mono',monospace; font-size:0.6rem; background:rgba(0,255,136,0.08); color:var(--accent); border:1px solid rgba(0,255,136,0.2); padding:3px 6px; border-radius:999px; }
+  .resume-list { display:grid; gap:6px; list-style:none; padding-left:0; }
+  .resume-list li { font-size:0.76rem; color:var(--text2); line-height:1.5; position:relative; padding-left:14px; }
+  .resume-list li::before { content:'•'; position:absolute; left:0; color:var(--accent2); }
+
+  .doc-body { padding:18px; display:flex; flex-direction:column; gap:12px; }
+  .doc-title { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; }
+  .doc-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; }
+  .doc-card-title { font-size:0.8rem; font-weight:700; }
+  .doc-card-meta { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); margin-top:4px; }
+  .doc-note { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text2); line-height:1.6; white-space:pre-wrap; }
+  .gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .gallery-item { aspect-ratio:4/3; border-radius:10px; background:linear-gradient(135deg,rgba(0,136,255,0.25),rgba(0,255,136,0.2)); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text2); }
 
   /* ===== SETTINGS ===== */
   #win-settings { width:420px; height:380px; top:100px; left:150px; }
@@ -461,7 +504,21 @@
             <div class="project-tags"><span class="proj-tag">Next.js</span><span class="proj-tag">Express</span><span class="proj-tag">MongoDB</span><span class="proj-tag">Redis</span></div>
             <div class="proj-links"><a class="proj-link" href="https://github.com/Prabhudattapanda07" target="_blank">↗ GitHub</a></div>
           </div>
-          
+          <div class="project-card">
+            <div class="project-num">04 —</div>
+            <div class="project-name">Portfolio</div>
+            <div class="project-desc">Personal portfolio site with clean sections, responsive layout, and smooth interactions.</div>
+            <div class="project-tags"><span class="proj-tag">Next.js</span><span class="proj-tag">UI</span><span class="proj-tag">Vercel</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://port-seven-swart.vercel.app" target="_blank">↗ Live</a></div>
+          </div>
+          <div class="project-card">
+            <div class="project-num">05 —</div>
+            <div class="project-name">Fourth Sem resource</div>
+            <div class="project-desc">Semester resource hub with subject-wise materials, quick navigation, and a tidy UI.</div>
+            <div class="project-tags"><span class="proj-tag">React</span><span class="proj-tag">Web</span><span class="proj-tag">Vercel</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://fourthsem.vercel.app/" target="_blank">↗ Live</a></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -533,14 +590,16 @@
         <div class="music-cover"><span class="music-spinning" id="music-vinyl">🎵</span></div>
         <div><div class="music-track" id="music-track">Coding Vibes</div><div class="music-artist" id="music-artist">Prabhu's Playlist — lofi beats</div></div>
         <div style="width:100%">
-          <div class="music-progress"><div class="music-bar" id="music-bar"></div></div>
-          <div class="music-times"><span id="music-curr">0:00</span><span id="music-total">3:42</span></div>
+          <div class="music-progress" id="music-progress"><div class="music-bar" id="music-bar"></div></div>
+          <div class="music-times"><span id="music-curr">0:00</span><span id="music-total">--:--</span></div>
         </div>
         <div class="music-controls">
           <button class="mc-btn" onclick="prevTrack()">⏮</button>
           <button class="mc-play" id="mc-play-btn" onclick="togglePlay()">▶</button>
           <button class="mc-btn" onclick="nextTrack()">⏭</button>
         </div>
+        <div class="music-queue" id="music-queue"></div>
+        <audio id="music-audio" preload="metadata"></audio>
       </div>
     </div>
   </div>
@@ -560,13 +619,233 @@
         </div>
         <div class="files-main">
           <div class="file-grid">
-            <div class="file-item" ondblclick="showNotification('📄 Resume — add your PDF link!')"><div class="file-icon">📄</div><div class="file-name">Resume.pdf</div></div>
-            <div class="file-item" ondblclick="showNotification('📁 Certificates')"><div class="file-icon">📁</div><div class="file-name">Certificates</div></div>
-            <div class="file-item" ondblclick="showNotification('🖼️ Screenshots')"><div class="file-icon">🖼️</div><div class="file-name">Screenshots</div></div>
+            <div class="file-item" ondblclick="openWindow('resume')"><div class="file-icon">📄</div><div class="file-name">Resume.pdf</div></div>
+            <div class="file-item" ondblclick="openWindow('certificates')"><div class="file-icon">📁</div><div class="file-name">Certificates</div></div>
+            <div class="file-item" ondblclick="openWindow('gallery')"><div class="file-icon">🖼️</div><div class="file-name">Screenshots</div></div>
             <div class="file-item" ondblclick="openWindow('projects')"><div class="file-icon">💼</div><div class="file-name">Projects</div></div>
-            <div class="file-item" ondblclick="showNotification('📝 Notes opened!')"><div class="file-icon">📝</div><div class="file-name">Notes.txt</div></div>
+            <div class="file-item" ondblclick="openWindow('notes')"><div class="file-icon">📝</div><div class="file-name">Notes.txt</div></div>
             <div class="file-item" ondblclick="showNotification('🔐 Access denied!')"><div class="file-icon">🔐</div><div class="file-name">Private</div></div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- RESUME -->
+  <div class="window" id="win-resume">
+    <div class="window-header" id="hdr-resume">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('resume')"></div><div class="wc wc-min" onclick="minimizeWindow('resume')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">📄 resume.pdf — Viewer</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="resume-body">
+        <div class="resume-header">
+          <div class="resume-name">Prabhudatta Panda</div>
+          <div class="resume-subtitle">Motivated Computer Science &amp; Engineering student</div>
+          <div class="resume-meta">B.Tech CSE • GEC Autonomous College • 2024 - 2028</div>
+          <div class="resume-meta">Bhubaneswar, Odisha • CGPA: 9.61 (Current)</div>
+          <div class="resume-actions">
+            <a class="resume-btn" href="docs/Prabhudatta_Panda_Resume.pdf" download>Download PDF</a>
+            <a class="resume-btn ghost" href="docs/Prabhudatta_Panda_Resume.pdf" target="_blank" rel="noopener">Open PDF</a>
+          </div>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Professional Summary</div>
+          <div class="resume-text">Motivated Computer Science &amp; Engineering student with a strong foundation in full-stack web development and modern technologies. Committed to continuous learning and delivering high-quality work with dedication and integrity. Equipped with hands-on experience in various programming languages, frameworks, and GenAI tools. Seeking opportunities to contribute technical skills and innovative problem-solving abilities to dynamic development projects.</div>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Education</div>
+          <div class="resume-item">
+            <div class="resume-item-title">Bachelor of Technology in Computer Science &amp; Engineering</div>
+            <div class="resume-item-meta">GEC Autonomous College • 2024 - 2028 • Bhubaneswar, Odisha</div>
+            <div class="resume-item-meta">Current CGPA: 9.61</div>
+          </div>
+          <div class="resume-item">
+            <div class="resume-item-title">Senior Secondary (Class XII) — Science Stream</div>
+            <div class="resume-item-meta">Upendranath Higher Secondary School, Soro • 2023 • CHSE Odisha</div>
+            <div class="resume-item-meta">Percentage: 72.12%</div>
+          </div>
+          <div class="resume-item">
+            <div class="resume-item-title">Secondary (Class X)</div>
+            <div class="resume-item-meta">Aruha Gramapanchayat High School • 2021 • BSE Odisha</div>
+            <div class="resume-item-meta">Percentage: 93.17%</div>
+          </div>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Technical Skills</div>
+          <div class="resume-skill-grid">
+            <div class="resume-skill-group">
+              <div class="resume-skill-label">Frontend Development</div>
+              <div class="resume-skill-tags">
+                <span class="resume-skill-tag">HTML5</span>
+                <span class="resume-skill-tag">CSS3</span>
+                <span class="resume-skill-tag">JavaScript</span>
+                <span class="resume-skill-tag">React</span>
+                <span class="resume-skill-tag">Angular 7.0</span>
+                <span class="resume-skill-tag">Bootstrap</span>
+                <span class="resume-skill-tag">Tailwind CSS</span>
+              </div>
+            </div>
+            <div class="resume-skill-group">
+              <div class="resume-skill-label">Backend Development</div>
+              <div class="resume-skill-tags">
+                <span class="resume-skill-tag">Node.js</span>
+                <span class="resume-skill-tag">Java</span>
+                <span class="resume-skill-tag">Spring Boot</span>
+                <span class="resume-skill-tag">Spring MVC</span>
+                <span class="resume-skill-tag">J2EE</span>
+                <span class="resume-skill-tag">Hibernate ORM</span>
+                <span class="resume-skill-tag">PHP</span>
+                <span class="resume-skill-tag">Python</span>
+              </div>
+            </div>
+            <div class="resume-skill-group">
+              <div class="resume-skill-label">Database Management</div>
+              <div class="resume-skill-tags">
+                <span class="resume-skill-tag">MySQL</span>
+                <span class="resume-skill-tag">MongoDB</span>
+                <span class="resume-skill-tag">PostgreSQL</span>
+                <span class="resume-skill-tag">MS SQL Server</span>
+                <span class="resume-skill-tag">NoSQL</span>
+              </div>
+            </div>
+            <div class="resume-skill-group">
+              <div class="resume-skill-label">Tools &amp; Technologies</div>
+              <div class="resume-skill-tags">
+                <span class="resume-skill-tag">WordPress</span>
+                <span class="resume-skill-tag">APIs</span>
+                <span class="resume-skill-tag">MVC Architecture</span>
+                <span class="resume-skill-tag">Google Analytics</span>
+                <span class="resume-skill-tag">Swing (Java)</span>
+              </div>
+            </div>
+            <div class="resume-skill-group">
+              <div class="resume-skill-label">GenAI &amp; AI-Assisted</div>
+              <div class="resume-skill-tags">
+                <span class="resume-skill-tag">Lovable</span>
+                <span class="resume-skill-tag">GitHub Copilot</span>
+                <span class="resume-skill-tag">Cursor</span>
+                <span class="resume-skill-tag">Windsurf</span>
+                <span class="resume-skill-tag">Replit</span>
+                <span class="resume-skill-tag">Elevenlabs</span>
+                <span class="resume-skill-tag">Vibe Coding</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Training &amp; Certifications</div>
+          <div class="resume-item">
+            <div class="resume-item-title">Java Programming</div>
+            <div class="resume-item-meta">KG Coding (Virtual) • December 2024 - May 2025</div>
+          </div>
+          <div class="resume-item">
+            <div class="resume-item-title">Full Stack Web Development</div>
+            <div class="resume-item-meta">Apna College (Virtual) • April 2024 - Present</div>
+            <div class="resume-item-meta">Comprehensive training in HTML5, CSS3, and Full Stack technologies</div>
+          </div>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Key Strengths</div>
+          <ul class="resume-list">
+            <li>Strong work ethic with commitment to organizational growth and excellence</li>
+            <li>Excellent team collaboration and interpersonal communication skills</li>
+            <li>Quick learner with adaptability to new technologies and methodologies</li>
+            <li>Punctual, reliable, and dedicated to delivering quality results</li>
+            <li>Strong moral values and professional integrity</li>
+          </ul>
+        </div>
+        <div class="resume-section">
+          <div class="resume-title">Interests</div>
+          <ul class="resume-list">
+            <li>Reading newspapers and staying updated with current affairs</li>
+            <li>Listening to music and exploring different genres</li>
+            <li>Networking and building meaningful professional connections</li>
+            <li>Traveling and exploring new places with friends</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- CERTIFICATES -->
+  <div class="window" id="win-certificates">
+    <div class="window-header" id="hdr-certificates">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('certificates')"></div><div class="wc wc-min" onclick="minimizeWindow('certificates')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">📁 certificates — Viewer</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="doc-body">
+        <div class="doc-title">Training &amp; Certifications</div>
+        <div class="doc-card">
+          <div class="doc-card-title">Java Programming</div>
+          <div class="doc-card-meta">KG Coding (Virtual) • December 2024 - May 2025</div>
+        </div>
+        <div class="doc-card">
+          <div class="doc-card-title">Full Stack Web Development</div>
+          <div class="doc-card-meta">Apna College (Virtual) • April 2024 - Present</div>
+          <div class="doc-card-meta">Comprehensive training in HTML5, CSS3, and Full Stack technologies</div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="window" id="win-notes">
+    <div class="window-header" id="hdr-notes">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('notes')"></div><div class="wc wc-min" onclick="minimizeWindow('notes')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">📝 notes.txt — Viewer</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="doc-body">
+        <div class="doc-title">Quick Notes</div>
+        <div class="doc-card">
+          <div class="doc-card-title">Key Strengths</div>
+          <ul class="resume-list">
+            <li>Strong work ethic with commitment to organizational growth and excellence</li>
+            <li>Excellent team collaboration and interpersonal communication skills</li>
+            <li>Quick learner with adaptability to new technologies and methodologies</li>
+            <li>Punctual, reliable, and dedicated to delivering quality results</li>
+            <li>Strong moral values and professional integrity</li>
+          </ul>
+        </div>
+        <div class="doc-card">
+          <div class="doc-card-title">Interests</div>
+          <ul class="resume-list">
+            <li>Reading newspapers and staying updated with current affairs</li>
+            <li>Listening to music and exploring different genres</li>
+            <li>Networking and building meaningful professional connections</li>
+            <li>Traveling and exploring new places with friends</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="window" id="win-gallery">
+    <div class="window-header" id="hdr-gallery">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('gallery')"></div><div class="wc wc-min" onclick="minimizeWindow('gallery')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">🖼️ screenshots — Viewer</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="doc-body">
+        <div class="doc-title">Screenshots</div>
+        <div class="gallery-grid">
+          <div class="gallery-item">Screenshot 01</div>
+          <div class="gallery-item">Screenshot 02</div>
+          <div class="gallery-item">Screenshot 03</div>
+          <div class="gallery-item">Screenshot 04</div>
+          <div class="gallery-item">Screenshot 05</div>
+          <div class="gallery-item">Screenshot 06</div>
         </div>
       </div>
     </div>
@@ -744,8 +1023,8 @@ function focusWindow(name) {
   document.querySelector(`.taskbar-btn[data-win="${name}"]`)?.classList.add('active');
 }
 
-const winNames = {about:'About',projects:'Projects',terminal:'Terminal',contact:'Contact',music:'Music',files:'Files',settings:'Settings'};
-const winIcons = {about:'👤',projects:'💼',terminal:'🖥️',contact:'📬',music:'🎵',files:'📁',settings:'⚙️'};
+const winNames = {about:'About',projects:'Projects',terminal:'Terminal',contact:'Contact',music:'Music',files:'Files',resume:'Resume',certificates:'Certificates',notes:'Notes',gallery:'Gallery',settings:'Settings'};
+const winIcons = {about:'👤',projects:'💼',terminal:'🖥️',contact:'📬',music:'🎵',files:'📁',resume:'📄',certificates:'📁',notes:'📝',gallery:'🖼️',settings:'⚙️'};
 
 function addTaskbarBtn(name) {
   if (document.querySelector(`.taskbar-btn[data-win="${name}"]`)) return;
@@ -811,7 +1090,7 @@ const termCommands = {
 <span class="term-result">  contact    → Contact info</span>
 <span class="term-result">  social     → Social links</span>
 <span class="term-result">  visitors   → Live visitor count</span>
-<span class="term-result">  open [app] → Open a window</span>
+<span class="term-result">  open [app] → Open a window (try: resume, notes, certificates, gallery)</span>
 <span class="term-result">  clear      → Clear terminal</span>
 <span class="term-result">  matrix     → 👀</span>
 <span class="term-result">  hire       → Hire Prabhu 😄</span>`,
@@ -826,10 +1105,11 @@ const termCommands = {
 <span class="term-accent">// DevOps</span>     Git · AWS · Vercel · Docker · CI/CD
 <span class="term-accent">// Design</span>     Figma · Framer · Animations`,
 
-  projects: () => `<span class="term-accent">01.</span> Real-Time Code Editor <span class="term-result">— React + Socket.io + MongoDB</span>
-<span class="term-accent">02.</span> Portfolio OS <span class="term-result">— This very site! MERN + Socket.io</span>
-<span class="term-accent">03.</span> Full Stack Platform <span class="term-result">— Next.js + Express + Redis</span>
-<span class="term-accent">04.</span> Performance Optimizer <span class="term-result">— 8s → 1.5s load time</span>`,
+  projects: () => `<span class="term-accent">01.</span> Real-Time Code Editor <span class="term-result">? React + Socket.io + MongoDB</span>
+<span class="term-accent">02.</span> Portfolio OS <span class="term-result">? This very site! MERN + Socket.io</span>
+<span class="term-accent">03.</span> Full Stack Platform <span class="term-result">? Next.js + Express + Redis</span>
+<span class="term-accent">04.</span> Port Seven <span class="term-result">? Next.js + UI + Vercel</span>
+<span class="term-accent">05.</span> FourthSem <span class="term-result">? React + Web + Vercel</span>`,
 
   contact: () => `<span class="term-accent">📧</span> prabhudattapanda77@gmail.com
 <span class="term-accent">📱</span> +91 8260318553
@@ -862,7 +1142,7 @@ document.getElementById('term-input').addEventListener('keydown', e => {
   out.innerHTML += `<div class="term-line"><span class="term-prompt">prabhu@portfolio:~$</span> <span class="term-cmd">${raw}</span></div>`;
   const parts = input.split(' '), cmd = parts[0], arg = parts[1];
   if (cmd === 'open' && arg) {
-    const apps = ['about','projects','terminal','contact','music','files','settings'];
+    const apps = ['about','projects','terminal','contact','music','files','resume','certificates','notes','gallery','settings'];
     if (apps.includes(arg)) { openWindow(arg); out.innerHTML += `<div class="term-line term-success">Opening ${arg}...</div>`; }
     else out.innerHTML += `<div class="term-line term-error">Unknown app: ${arg}. Try: ${apps.join(', ')}</div>`;
   } else if (termCommands[cmd]) {
@@ -937,44 +1217,109 @@ async function sendMessage() {
 
 // ===== MUSIC =====
 const tracks = [
-  { name:'Coding Vibes', artist:'lofi beats', duration:'3:42' },
-  { name:'Deep Focus', artist:'chill hop', duration:'4:15' },
-  { name:'Midnight Dev', artist:'ambient lo-fi', duration:'3:28' },
-  { name:'Flow State', artist:'study beats', duration:'5:01' },
+  { name:'Coding Vibes', artist:'lofi beats', src:'audio/coding-vibes.wav' },
+  { name:'Deep Focus', artist:'chill hop', src:'audio/deep-focus.wav' },
+  { name:'Midnight Dev', artist:'ambient lo-fi', src:'audio/midnight-dev.wav' },
+  { name:'Flow State', artist:'study beats', src:'audio/flow-state.wav' },
 ];
-let currentTrack = 0, musicPlaying = false, musicSecs = 0, musicInterval = null;
+const audio = document.getElementById('music-audio');
+const musicBar = document.getElementById('music-bar');
+const musicCurr = document.getElementById('music-curr');
+const musicTotal = document.getElementById('music-total');
+const musicQueue = document.getElementById('music-queue');
+const musicProgress = document.getElementById('music-progress');
+const musicPlayBtn = document.getElementById('mc-play-btn');
+const vinyl = document.getElementById('music-vinyl');
+let currentTrack = 0;
 
 function togglePlay() {
-  musicPlaying = !musicPlaying;
-  document.getElementById('mc-play-btn').textContent = musicPlaying ? '⏸' : '▶';
-  const vinyl = document.getElementById('music-vinyl');
-  if (musicPlaying) {
-    vinyl.classList.add('playing');
-    musicInterval = setInterval(() => {
-      musicSecs++;
-      const [tm,ts] = tracks[currentTrack].duration.split(':').map(Number);
-      const total = tm*60+ts;
-      document.getElementById('music-bar').style.width = Math.min(musicSecs/total*100,100)+'%';
-      document.getElementById('music-curr').textContent = `${Math.floor(musicSecs/60)}:${(musicSecs%60).toString().padStart(2,'0')}`;
-      if (musicSecs >= total) nextTrack();
-    }, 1000);
+  if (!audio.src) loadTrack();
+  if (audio.paused) {
+    audio.play().catch(() => showNotification('🔇 Tap play to start audio'));
   } else {
-    vinyl.classList.remove('playing');
-    clearInterval(musicInterval);
+    audio.pause();
   }
 }
 
-function nextTrack() { currentTrack=(currentTrack+1)%tracks.length; loadTrack(); }
-function prevTrack() { currentTrack=(currentTrack-1+tracks.length)%tracks.length; loadTrack(); }
-function loadTrack() {
+function nextTrack(autoplay = !audio.paused) {
+  currentTrack = (currentTrack + 1) % tracks.length;
+  loadTrack(autoplay);
+}
+function prevTrack(autoplay = !audio.paused) {
+  currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
+  loadTrack(autoplay);
+}
+function formatTime(seconds) {
+  if (!Number.isFinite(seconds)) return '--:--';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+function setActiveTrack() {
+  [...musicQueue.children].forEach((el, idx) => el.classList.toggle('active', idx === currentTrack));
+}
+function buildQueue() {
+  musicQueue.innerHTML = '';
+  tracks.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'music-item';
+    btn.innerHTML = `<span>${t.name}</span><span>${t.artist}</span>`;
+    btn.onclick = () => {
+      const wasPlaying = !audio.paused;
+      currentTrack = i;
+      loadTrack(wasPlaying);
+    };
+    musicQueue.appendChild(btn);
+  });
+  setActiveTrack();
+}
+function loadTrack(autoplay = false) {
   const t = tracks[currentTrack];
   document.getElementById('music-track').textContent = t.name;
   document.getElementById('music-artist').textContent = `Prabhu's Playlist — ${t.artist}`;
-  document.getElementById('music-total').textContent = t.duration;
-  musicSecs = 0;
-  document.getElementById('music-bar').style.width = '0%';
-  document.getElementById('music-curr').textContent = '0:00';
+  audio.src = t.src;
+  audio.load();
+  musicBar.style.width = '0%';
+  musicCurr.textContent = '0:00';
+  musicTotal.textContent = '--:--';
+  setActiveTrack();
+  if (autoplay) {
+    audio.play().catch(() => showNotification('🔇 Tap play to start audio'));
+  }
 }
+
+musicProgress.addEventListener('click', e => {
+  if (!audio.duration) return;
+  const rect = musicProgress.getBoundingClientRect();
+  const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+  audio.currentTime = ratio * audio.duration;
+});
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  musicBar.style.width = Math.min((audio.currentTime / audio.duration) * 100, 100) + '%';
+  musicCurr.textContent = formatTime(audio.currentTime);
+});
+audio.addEventListener('loadedmetadata', () => {
+  musicTotal.textContent = formatTime(audio.duration);
+});
+audio.addEventListener('play', () => {
+  musicPlayBtn.textContent = '⏸';
+  vinyl.classList.add('playing');
+});
+audio.addEventListener('pause', () => {
+  musicPlayBtn.textContent = '▶';
+  vinyl.classList.remove('playing');
+});
+audio.addEventListener('ended', () => {
+  nextTrack(true);
+});
+audio.addEventListener('error', () => {
+  showNotification('⚠️ Audio failed to load');
+});
+
+buildQueue();
+loadTrack();
 
 // ===== SETTINGS =====
 function setWallpaper(type, el) {
