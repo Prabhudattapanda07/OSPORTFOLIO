@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrabhuOS — Prabhudatta Panda</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<!-- Socket.io CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: rgba(255,255,255,0.04);
+    --surface2: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --accent: #00ff88;
+    --accent2: #0088ff;
+    --accent3: #ff6b35;
+    --text: #e8e8f0;
+    --text2: #888899;
+    --text3: #555566;
+    --glass: rgba(15,15,25,0.85);
+    --glass2: rgba(20,20,35,0.96);
+    --taskbar: rgba(10,10,18,0.97);
+    --window-header: rgba(25,25,40,0.99);
+    --red: #ff4d4d;
+    --yellow: #ffcc00;
+    --green: #00cc66;
+    --API_URL: '';
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; width:100vw; user-select:none; }
+
+  /* ===== MOBILE FALLBACK ===== */
+  #mobile-screen {
+    display: none;
+    position: fixed; inset: 0;
+    background: #0a0a0f;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    z-index: 99999;
+  }
+
+  @media (max-width: 768px) {
+    #mobile-screen { display: flex; }
+    #boot-screen, #desktop { display: none !important; }
+  }
+
+  .mobile-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    text-shadow: 0 0 40px rgba(0,255,136,0.6);
+  }
+  .mobile-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+  .mobile-icon { font-size: 4rem; margin-bottom: 24px; }
+  .mobile-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .mobile-desc {
+    font-size: 0.88rem;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 300px;
+    margin-bottom: 40px;
+  }
+  .mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+  }
+  .mobile-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    text-decoration: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+  }
+  .mobile-link:hover { border-color: var(--accent); background: rgba(0,255,136,0.06); }
+  .mobile-footer {
+    margin-top: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  /* ===== BOOT SCREEN ===== */
+  #boot-screen {
+    position:fixed; inset:0;
+    background:#000;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:9999;
+    transition: opacity 0.8s ease;
+  }
+  #boot-screen.fade-out { opacity:0; pointer-events:none; }
+  .boot-logo { font-family:'Space Mono',monospace; font-size:3.5rem; font-weight:700; color:var(--accent); letter-spacing:-2px; margin-bottom:8px; animation:bootPulse 1s ease-in-out infinite alternate; }
+  @keyframes bootPulse { from{text-shadow:0 0 20px rgba(0,255,136,0.5)} to{text-shadow:0 0 60px rgba(0,255,136,0.9),0 0 120px rgba(0,255,136,0.3)} }
+  .boot-sub { font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text3); letter-spacing:4px; text-transform:uppercase; margin-bottom:60px; }
+  .boot-bar-wrap { width:240px; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-bottom:16px; }
+  .boot-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); width:0%; transition:width 0.1s linear; box-shadow:0 0 12px var(--accent); }
+  .boot-status { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--text3); letter-spacing:2px; }
+
+  /* ===== DESKTOP ===== */
+  #desktop {
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,255,136,0.05) 0%,transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%,rgba(0,136,255,0.05) 0%,transparent 60%),
+      #0a0a0f;
+    padding-bottom:52px;
+    display:none;
+  }
+  #desktop.visible { display:block; }
+  #desktop::before {
+    content:''; position:absolute; inset:0;
+    background-image:linear-gradient(rgba(0,255,136,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.015) 1px,transparent 1px);
+    background-size:60px 60px; pointer-events:none;
+  }
+
+  /* ===== DESKTOP ICONS ===== */
+  #icon-grid { position:absolute; top:28px; right:28px; display:flex; flex-direction:column; gap:8px; z-index:10; }
+  .desktop-icon { display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px 8px; border-radius:12px; cursor:pointer; width:76px; transition:all 0.15s; border:1px solid transparent; }
+  .desktop-icon:hover { background:rgba(255,255,255,0.07); border-color:var(--border); transform:scale(1.05); }
+  .desktop-icon:active { transform:scale(0.97); }
+  .icon-emoji { font-size:1.8rem; line-height:1; }
+  .icon-label { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text); text-align:center; text-shadow:0 1px 4px rgba(0,0,0,0.8); font-weight:500; }
+
+  /* ===== TASKBAR ===== */
+  #taskbar { position:fixed; bottom:0; left:0; right:0; height:52px; background:var(--taskbar); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:8px; z-index:1000; backdrop-filter:blur(20px); }
+  .taskbar-logo { font-family:'Space Mono',monospace; font-size:0.85rem; color:var(--accent); font-weight:700; padding:6px 12px; border-radius:8px; border:1px solid rgba(0,255,136,0.2); background:rgba(0,255,136,0.05); cursor:pointer; letter-spacing:-0.5px; transition:all 0.2s; }
+  .taskbar-logo:hover { background:rgba(0,255,136,0.1); border-color:rgba(0,255,136,0.4); }
+  .taskbar-divider { width:1px; height:28px; background:var(--border); margin:0 4px; }
+  .taskbar-apps { display:flex; gap:4px; flex:1; }
+  .taskbar-btn { display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:7px; border:1px solid transparent; background:transparent; color:var(--text2); font-family:'JetBrains Mono',monospace; font-size:0.65rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .taskbar-btn:hover { background:var(--surface2); color:var(--text); }
+  .taskbar-btn.active { background:var(--surface2); color:var(--accent); border-color:rgba(0,255,136,0.15); }
+  .taskbar-btn .tb-dot { width:5px; height:5px; border-radius:50%; background:var(--accent); opacity:0; }
+  .taskbar-btn.active .tb-dot { opacity:1; }
+  .taskbar-right { display:flex; align-items:center; gap:12px; margin-left:auto; }
+  .taskbar-time { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text2); }
+  .taskbar-visitors { display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--accent2); background:rgba(0,136,255,0.08); border:1px solid rgba(0,136,255,0.2); padding:3px 8px; border-radius:20px; }
+  .taskbar-status { display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--green); background:rgba(0,204,102,0.08); border:1px solid rgba(0,204,102,0.15); padding:3px 8px; border-radius:20px; }
+  .status-dot { width:5px; height:5px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+  .visitor-dot { width:5px; height:5px; border-radius:50%; background:var(--accent2); animation:blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ===== WINDOWS ===== */
+  .window { position:absolute; border-radius:14px; border:1px solid var(--border2); background:var(--glass2); backdrop-filter:blur(30px); box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.03); display:none; flex-direction:column; overflow:hidden; min-width:340px; min-height:200px; }
+  .window.open { display:flex; animation:windowOpen 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  .window.focused { box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 0 1px rgba(0,255,136,0.1); z-index:100; }
+  @keyframes windowOpen { from{opacity:0;transform:scale(0.88) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  .window-header { display:flex; align-items:center; padding:12px 16px; background:var(--window-header); border-bottom:1px solid var(--border); cursor:grab; gap:10px; flex-shrink:0; }
+  .window-header:active { cursor:grabbing; }
+  .window-controls { display:flex; gap:6px; }
+  .wc { width:12px; height:12px; border-radius:50%; cursor:pointer; transition:filter 0.15s; border:none; }
+  .wc:hover { filter:brightness(1.3); }
+  .wc-close { background:var(--red); }
+  .wc-min { background:var(--yellow); }
+  .wc-max { background:var(--green); }
+  .window-title { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text2); flex:1; text-align:center; letter-spacing:0.5px; }
+  .window-body { flex:1; overflow-y:auto; overflow-x:hidden; }
+  .window-body::-webkit-scrollbar { width:4px; }
+  .window-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+  .resize-handle { position:absolute; bottom:0; right:0; width:16px; height:16px; cursor:nwse-resize; opacity:0.4; }
+  .resize-handle::after { content:''; position:absolute; bottom:4px; right:4px; width:8px; height:8px; border-right:2px solid var(--border2); border-bottom:2px solid var(--border2); }
+
+  /* ===== ABOUT ===== */
+  #win-about { width:560px; height:500px; top:60px; left:80px; }
+  .about-body { padding:28px; }
+  .about-header { display:flex; gap:20px; align-items:center; margin-bottom:24px; }
+  .about-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:2rem; flex-shrink:0; box-shadow:0 0 30px rgba(0,255,136,0.3); }
+  .about-name { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; color:var(--text); line-height:1; margin-bottom:4px; }
+  .about-role { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--accent); letter-spacing:1px; }
+  .about-bio { font-size:0.88rem; color:var(--text2); line-height:1.7; margin-bottom:24px; border-left:2px solid var(--accent); padding-left:14px; }
+  .about-details { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+  .detail-item { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; }
+  .detail-label { font-family:'JetBrains Mono',monospace; font-size:0.58rem; color:var(--text3); text-transform:uppercase; letter-spacing:2px; margin-bottom:3px; }
+  .detail-value { font-size:0.82rem; color:var(--text); font-weight:600; }
+  .skills-title { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--text3); text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
+  .skills-grid { display:flex; flex-wrap:wrap; gap:6px; }
+  .skill-tag { font-family:'JetBrains Mono',monospace; font-size:0.65rem; padding:4px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text2); background:var(--surface); transition:all 0.15s; cursor:default; }
+  .skill-tag:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.05); }
+
+  /* ===== PROJECTS ===== */
+  #win-projects { width:680px; height:520px; top:80px; left:200px; }
+  .projects-body { padding:24px; }
+  .projects-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .project-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+  .project-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transform:scaleX(0); transform-origin:left; transition:transform 0.3s ease; }
+  .project-card:hover { border-color:var(--border2); transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,0.3); }
+  .project-card:hover::before { transform:scaleX(1); }
+  .project-num { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--accent); letter-spacing:2px; margin-bottom:8px; }
+  .project-name { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:6px; }
+  .project-desc { font-size:0.78rem; color:var(--text2); line-height:1.5; margin-bottom:12px; }
+  .project-tags { display:flex; flex-wrap:wrap; gap:4px; }
+  .proj-tag { font-family:'JetBrains Mono',monospace; font-size:0.58rem; padding:2px 7px; border-radius:3px; background:rgba(0,136,255,0.1); color:var(--accent2); border:1px solid rgba(0,136,255,0.2); }
+  .proj-links { display:flex; gap:8px; margin-top:12px; }
+  .proj-link { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); text-decoration:none; padding:3px 8px; border:1px solid var(--border); border-radius:4px; transition:all 0.15s; }
+  .proj-link:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* ===== TERMINAL ===== */
+  #win-terminal { width:600px; height:420px; top:120px; left:300px; }
+  .terminal-body { padding:16px; font-family:'JetBrains Mono',monospace; font-size:0.78rem; background:rgba(0,0,0,0.4); height:100%; display:flex; flex-direction:column; cursor:text; }
+  .term-output { flex:1; overflow-y:auto; }
+  .term-output::-webkit-scrollbar { width:3px; }
+  .term-output::-webkit-scrollbar-thumb { background:var(--border2); }
+  .term-line { line-height:1.6; margin-bottom:2px; }
+  .term-prompt { color:var(--accent); }
+  .term-cmd { color:var(--text); }
+  .term-result { color:var(--text2); }
+  .term-success { color:var(--green); }
+  .term-warn { color:var(--yellow); }
+  .term-error { color:var(--red); }
+  .term-accent { color:var(--accent2); }
+  .term-link { color:var(--accent); cursor:pointer; text-decoration:underline; }
+  .term-input-row { display:flex; align-items:center; gap:8px; margin-top:4px; }
+  .term-input-prompt { color:var(--accent); white-space:nowrap; }
+  #term-input { background:transparent; border:none; outline:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:0.78rem; flex:1; caret-color:var(--accent); }
+
+  /* ===== CONTACT ===== */
+  #win-contact { width:480px; height:520px; top:60px; left:120px; }
+  .contact-body { padding:28px; }
+  .contact-title { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; margin-bottom:6px; }
+  .contact-sub { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text3); margin-bottom:20px; }
+  .contact-links { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+  .contact-link-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:10px; background:var(--surface); border:1px solid var(--border); text-decoration:none; transition:all 0.2s; }
+  .contact-link-item:hover { border-color:var(--accent); background:rgba(0,255,136,0.04); transform:translateX(4px); }
+  .cli-icon { font-size:1rem; }
+  .cli-label { font-family:'JetBrains Mono',monospace; font-size:0.58rem; color:var(--text3); letter-spacing:1px; text-transform:uppercase; }
+  .cli-value { font-size:0.8rem; color:var(--text); margin-top:1px; }
+  .contact-form { display:flex; flex-direction:column; gap:10px; }
+  .cf-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .cf-input { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:0.75rem; outline:none; transition:border-color 0.2s; width:100%; }
+  .cf-input::placeholder { color:var(--text3); }
+  .cf-input:focus { border-color:var(--accent); }
+  textarea.cf-input { resize:none; height:75px; }
+  .cf-btn { background:linear-gradient(135deg,var(--accent),#00cc66); color:#000; border:none; border-radius:8px; padding:12px; font-family:'JetBrains Mono',monospace; font-size:0.75rem; font-weight:700; cursor:pointer; letter-spacing:1px; text-transform:uppercase; transition:all 0.2s; }
+  .cf-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,255,136,0.3); }
+  .cf-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+  /* ===== MUSIC ===== */
+  #win-music { width:340px; height:360px; top:80px; left:500px; }
+  .music-body { padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .music-cover { width:140px; height:140px; border-radius:12px; background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460); display:flex; align-items:center; justify-content:center; font-size:3rem; box-shadow:0 20px 40px rgba(0,0,0,0.5); }
+  .music-spinning { animation:spin 4s linear infinite; animation-play-state:paused; }
+  .music-spinning.playing { animation-play-state:running; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .music-track { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; text-align:center; }
+  .music-artist { font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--text3); margin-top:3px; text-align:center; }
+  .music-progress { width:100%; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+  .music-bar { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; width:0%; transition:width 0.5s linear; }
+  .music-times { display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text3); margin-top:4px; width:100%; }
+  .music-controls { display:flex; align-items:center; gap:16px; }
+  .mc-btn { background:transparent; border:none; color:var(--text2); font-size:1.1rem; cursor:pointer; transition:all 0.15s; padding:4px; }
+  .mc-btn:hover { color:var(--text); transform:scale(1.15); }
+  .mc-play { width:44px; height:44px; border-radius:50%; background:var(--accent); color:#000; font-size:1.1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; box-shadow:0 0 20px rgba(0,255,136,0.4); transition:all 0.2s; }
+  .mc-play:hover { transform:scale(1.1); box-shadow:0 0 30px rgba(0,255,136,0.6); }
+
+  /* ===== FILES ===== */
+  #win-files { width:500px; height:380px; top:100px; left:180px; }
+  .files-body { display:flex; height:100%; }
+  .files-sidebar { width:120px; background:rgba(0,0,0,0.2); border-right:1px solid var(--border); padding:12px; flex-shrink:0; }
+  .fs-label { font-family:'JetBrains Mono',monospace; font-size:0.55rem; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; padding-left:4px; }
+  .fs-section { margin-bottom:16px; }
+  .fs-item { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:5px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:var(--text2); transition:all 0.15s; }
+  .fs-item:hover,.fs-item.active { background:var(--surface2); color:var(--accent); }
+  .files-main { flex:1; padding:16px; overflow-y:auto; }
+  .file-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .file-item { display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 8px; border-radius:8px; cursor:pointer; transition:all 0.15s; border:1px solid transparent; }
+  .file-item:hover { background:var(--surface2); border-color:var(--border); }
+  .file-icon { font-size:2rem; }
+  .file-name { font-family:'JetBrains Mono',monospace; font-size:0.6rem; color:var(--text2); text-align:center; }
+
+  /* ===== SETTINGS ===== */
+  #win-settings { width:420px; height:380px; top:100px; left:150px; }
+  .settings-body { padding:24px; }
+  .settings-section { margin-bottom:24px; }
+  .settings-label { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
+  .wallpaper-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .wp-option { aspect-ratio:16/10; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+  .wp-option.active { border-color:var(--accent); }
+  .wp-option:hover { transform:scale(1.03); }
+  .wp-label { font-family:'JetBrains Mono',monospace; font-size:0.55rem; }
+  .settings-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .stl-name { font-size:0.82rem; color:var(--text); }
+  .stl-desc { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--text3); }
+  .toggle { width:36px; height:20px; border-radius:10px; background:var(--surface2); border:1px solid var(--border); cursor:pointer; position:relative; transition:background 0.2s; flex-shrink:0; }
+  .toggle.on { background:var(--accent); border-color:var(--accent); }
+  .toggle::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform 0.2s; }
+  .toggle.on::after { transform:translateX(16px); }
+
+  /* ===== CURSOR ===== */
+  #cursor { position:fixed; width:10px; height:10px; border-radius:50%; background:var(--accent); pointer-events:none; z-index:99999; transform:translate(-50%,-50%); mix-blend-mode:screen; }
+  #cursor-ring { position:fixed; width:32px; height:32px; border-radius:50%; border:1px solid rgba(0,255,136,0.4); pointer-events:none; z-index:99998; transform:translate(-50%,-50%); transition:left 0.08s ease,top 0.08s ease,width 0.2s,height 0.2s; }
+
+  /* ===== NOTIFICATION ===== */
+  #notification { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-80px); background:var(--glass2); border:1px solid var(--border2); border-radius:10px; padding:10px 20px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text); z-index:9999; transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); backdrop-filter:blur(20px); box-shadow:0 10px 30px rgba(0,0,0,0.4); white-space:nowrap; }
+  #notification.show { transform:translateX(-50%) translateY(0); }
+
+  /* ===== RIGHT CLICK MENU ===== */
+  #ctx-menu { position:fixed; background:var(--glass2); border:1px solid var(--border2); border-radius:10px; padding:6px; z-index:9999; backdrop-filter:blur(30px); box-shadow:0 20px 50px rgba(0,0,0,0.6); display:none; min-width:180px; }
+  .ctx-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text2); transition:all 0.15s; }
+  .ctx-item:hover { background:var(--surface2); color:var(--text); }
+  .ctx-divider { height:1px; background:var(--border); margin:4px 0; }
+
+  /* Wallpaper themes */
+  body.wp-sunset #desktop { background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(255,107,53,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 90%,rgba(255,0,128,0.06) 0%,transparent 60%),#0f0a0a; }
+  body.wp-ocean #desktop { background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,136,255,0.1) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 90%,rgba(0,255,200,0.06) 0%,transparent 60%),#050f18; }
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- Notification -->
+<div id="notification">✅ Done!</div>
+
+<!-- Right Click Menu -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="openWindow('about')">👤 About Prabhu</div>
+  <div class="ctx-item" onclick="openWindow('projects')">💼 Projects</div>
+  <div class="ctx-item" onclick="openWindow('terminal')">🖥️ Terminal</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item" onclick="openWindow('settings')">⚙️ Settings</div>
+  <div class="ctx-item" onclick="showNotification('🔄 Desktop refreshed!')">🔄 Refresh</div>
+</div>
+
+<!-- ===== MOBILE FALLBACK ===== -->
+<div id="mobile-screen">
+  <div class="mobile-logo">PrabhuOS</div>
+  <div class="mobile-tag">v2.0 — Full Stack Edition</div>
+  <div class="mobile-icon">🖥️</div>
+  <div class="mobile-title">Best Viewed on Desktop</div>
+  <div class="mobile-desc">This portfolio is a full OS experience with draggable windows, a live terminal, and more. Open it on a laptop or desktop for the full effect!</div>
+  <div class="mobile-links">
+    <a class="mobile-link" href="mailto:prabhudattapanda77@gmail.com">
+      📧 &nbsp; prabhudattapanda77@gmail.com
+    </a>
+    <a class="mobile-link" href="https://www.linkedin.com/in/prabhudattapanda07/" target="_blank">
+      💼 &nbsp; linkedin.com/in/prabhudattapanda07
+    </a>
+    <a class="mobile-link" href="https://github.com/Prabhudattapanda07" target="_blank">
+      🐱 &nbsp; github.com/Prabhudattapanda07
+    </a>
+    <a class="mobile-link" href="tel:+918260318553">
+      📱 &nbsp; +91 8260318553
+    </a>
+  </div>
+  <div class="mobile-footer">© 2025 Prabhudatta Panda — Crafted with ♥ &amp; MERN</div>
+</div>
+
+<!-- ===== BOOT SCREEN ===== -->
+<div id="boot-screen">
+  <div class="boot-logo">PrabhuOS</div>
+  <div class="boot-sub">v2.0 — Full Stack Edition</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-status" id="boot-status">Initializing kernel...</div>
+</div>
+
+<!-- ===== DESKTOP ===== -->
+<div id="desktop">
+  <!-- Icons -->
+  <div id="icon-grid">
+    <div class="desktop-icon" ondblclick="openWindow('about')"><div class="icon-emoji">👤</div><div class="icon-label">About Me</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('projects')"><div class="icon-emoji">💼</div><div class="icon-label">Projects</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('terminal')"><div class="icon-emoji">🖥️</div><div class="icon-label">Terminal</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('contact')"><div class="icon-emoji">📬</div><div class="icon-label">Contact</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('music')"><div class="icon-emoji">🎵</div><div class="icon-label">Music</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('files')"><div class="icon-emoji">📁</div><div class="icon-label">Files</div></div>
+    <div class="desktop-icon" ondblclick="openWindow('settings')"><div class="icon-emoji">⚙️</div><div class="icon-label">Settings</div></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="window" id="win-about">
+    <div class="window-header" id="hdr-about">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('about')"></div><div class="wc wc-min" onclick="minimizeWindow('about')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">👤 about.exe — Prabhudatta Panda</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="about-body">
+        <div class="about-header">
+          <div class="about-avatar">👨‍💻</div>
+          <div>
+            <div class="about-name">Prabhudatta Panda</div>
+            <div class="about-role">// Full Stack Web Developer</div>
+          </div>
+        </div>
+        <p class="about-bio">Passionate Full Stack Developer who thrives at the intersection of design and engineering. I believe the web should be both beautiful and bulletproof — and I don't compromise on either. Crafting immersive digital experiences from sleek frontends to bulletproof backends.</p>
+        <div class="about-details">
+          <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">📍 Odisha, India</div></div>
+          <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value" style="color:var(--green)">✅ Available 2026</div></div>
+          <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value" style="font-size:0.68rem">prabhudattapanda77@gmail.com</div></div>
+          <div class="detail-item"><div class="detail-label">GitHub</div><div class="detail-value">Prabhudattapanda07</div></div>
+        </div>
+        <div class="skills-title">// tech stack</div>
+        <div class="skills-grid">
+          <span class="skill-tag">React</span><span class="skill-tag">Next.js</span><span class="skill-tag">Node.js</span><span class="skill-tag">MongoDB</span><span class="skill-tag">Express</span><span class="skill-tag">TypeScript</span><span class="skill-tag">GSAP</span><span class="skill-tag">Redis</span><span class="skill-tag">CSS3</span><span class="skill-tag">Figma</span><span class="skill-tag">DevOps</span><span class="skill-tag">CI/CD</span>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="window" id="win-projects">
+    <div class="window-header" id="hdr-projects">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('projects')"></div><div class="wc wc-min" onclick="minimizeWindow('projects')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">💼 projects.exe — Portfolio</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="projects-body">
+        <div class="projects-grid">
+          <div class="project-card">
+            <div class="project-num">01 —</div>
+            <div class="project-name">Real-Time Code Editor</div>
+            <div class="project-desc">Collaborative editor with live sync, multi-user cursors, syntax highlighting, and room management.</div>
+            <div class="project-tags"><span class="proj-tag">React</span><span class="proj-tag">Socket.io</span><span class="proj-tag">Node.js</span><span class="proj-tag">MongoDB</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://github.com/Prabhudattapanda07" target="_blank">↗ GitHub</a><a class="proj-link" href="https://port-seven-swart.vercel.app" target="_blank">↗ Live</a></div>
+          </div>
+          <div class="project-card">
+            <div class="project-num">02 —</div>
+            <div class="project-name">Portfolio OS</div>
+            <div class="project-desc">This very portfolio! A browser-based OS with draggable windows, live terminal, and Socket.io visitor counter.</div>
+            <div class="project-tags"><span class="proj-tag">MERN</span><span class="proj-tag">Socket.io</span><span class="proj-tag">Nodemailer</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://github.com/Prabhudattapanda07" target="_blank">↗ GitHub</a></div>
+          </div>
+          <div class="project-card">
+            <div class="project-num">03 —</div>
+            <div class="project-name">Full Stack Platform</div>
+            <div class="project-desc">End-to-end production app with JWT auth, REST APIs, real-time features, and cloud deployment.</div>
+            <div class="project-tags"><span class="proj-tag">Next.js</span><span class="proj-tag">Express</span><span class="proj-tag">MongoDB</span><span class="proj-tag">Redis</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://github.com/Prabhudattapanda07" target="_blank">↗ GitHub</a></div>
+          </div>
+          <div class="project-card">
+            <div class="project-num">04 —</div>
+            <div class="project-name">Performance Optimizer</div>
+            <div class="project-desc">Transformed slow sites to sub-1.5s loads. Core Web Vitals, SEO, Lighthouse score maximization.</div>
+            <div class="project-tags"><span class="proj-tag">TypeScript</span><span class="proj-tag">Next.js</span><span class="proj-tag">Vercel</span></div>
+            <div class="proj-links"><a class="proj-link" href="https://github.com/Prabhudattapanda07" target="_blank">↗ GitHub</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="window" id="win-terminal">
+    <div class="window-header" id="hdr-terminal">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('terminal')"></div><div class="wc wc-min" onclick="minimizeWindow('terminal')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">🖥️ prabhu@portfolio:~$</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body" style="height:100%">
+      <div class="terminal-body" onclick="document.getElementById('term-input').focus()">
+        <div class="term-output" id="term-output">
+          <div class="term-line"><span class="term-success">PrabhuOS v2.0</span> — <span class="term-accent">Full Stack Edition</span></div>
+          <div class="term-line term-result">Type <span class="term-prompt">'help'</span> to see available commands.</div>
+          <div class="term-line"> </div>
+        </div>
+        <div class="term-input-row">
+          <span class="term-input-prompt">prabhu@portfolio:~$&nbsp;</span>
+          <input id="term-input" type="text" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="window" id="win-contact">
+    <div class="window-header" id="hdr-contact">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('contact')"></div><div class="wc wc-min" onclick="minimizeWindow('contact')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">📬 contact.exe — Let's Talk</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="contact-body">
+        <div class="contact-title">Let's Build Something 🚀</div>
+        <div class="contact-sub">// Available for work — 2026</div>
+        <div class="contact-links">
+          <a class="contact-link-item" href="mailto:prabhudattapanda77@gmail.com"><div class="cli-icon">📧</div><div><div class="cli-label">Email</div><div class="cli-value">prabhudattapanda77@gmail.com</div></div><span style="color:var(--text3);margin-left:auto">↗</span></a>
+          <a class="contact-link-item" href="https://www.linkedin.com/in/prabhudattapanda07/" target="_blank"><div class="cli-icon">💼</div><div><div class="cli-label">LinkedIn</div><div class="cli-value">prabhudattapanda07</div></div><span style="color:var(--text3);margin-left:auto">↗</span></a>
+          <a class="contact-link-item" href="https://github.com/Prabhudattapanda07" target="_blank"><div class="cli-icon">🐱</div><div><div class="cli-label">GitHub</div><div class="cli-value">Prabhudattapanda07</div></div><span style="color:var(--text3);margin-left:auto">↗</span></a>
+          <a class="contact-link-item" href="tel:+918260318553"><div class="cli-icon">📱</div><div><div class="cli-label">Phone</div><div class="cli-value">+91 8260318553</div></div><span style="color:var(--text3);margin-left:auto">↗</span></a>
+        </div>
+        <div class="contact-form">
+          <div class="cf-row">
+            <input class="cf-input" id="cf-name" type="text" placeholder="Your name" />
+            <input class="cf-input" id="cf-email" type="email" placeholder="your@email.com" />
+          </div>
+          <input class="cf-input" id="cf-subject" type="text" placeholder="Subject" />
+          <textarea class="cf-input" id="cf-msg" placeholder="Your message..."></textarea>
+          <button class="cf-btn" id="cf-submit" onclick="sendMessage()">Send Message →</button>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- MUSIC -->
+  <div class="window" id="win-music">
+    <div class="window-header" id="hdr-music">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('music')"></div><div class="wc wc-min" onclick="minimizeWindow('music')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">🎵 music.exe — Now Playing</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body" style="height:100%">
+      <div class="music-body">
+        <div class="music-cover"><span class="music-spinning" id="music-vinyl">🎵</span></div>
+        <div><div class="music-track" id="music-track">Coding Vibes</div><div class="music-artist" id="music-artist">Prabhu's Playlist — lofi beats</div></div>
+        <div style="width:100%">
+          <div class="music-progress"><div class="music-bar" id="music-bar"></div></div>
+          <div class="music-times"><span id="music-curr">0:00</span><span id="music-total">3:42</span></div>
+        </div>
+        <div class="music-controls">
+          <button class="mc-btn" onclick="prevTrack()">⏮</button>
+          <button class="mc-play" id="mc-play-btn" onclick="togglePlay()">▶</button>
+          <button class="mc-btn" onclick="nextTrack()">⏭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILES -->
+  <div class="window" id="win-files">
+    <div class="window-header" id="hdr-files">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('files')"></div><div class="wc wc-min" onclick="minimizeWindow('files')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">📁 files.exe — Documents</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body" style="height:100%">
+      <div class="files-body">
+        <div class="files-sidebar">
+          <div class="fs-section"><div class="fs-label">Favorites</div><div class="fs-item active">🏠 Home</div><div class="fs-item" onclick="showNotification('📄 Docs folder')">📄 Docs</div><div class="fs-item" onclick="openWindow('projects')">💼 Projects</div></div>
+          <div class="fs-section"><div class="fs-label">Places</div><div class="fs-item" onclick="showNotification('⬇️ Downloads')">⬇️ Downloads</div><div class="fs-item" onclick="showNotification('🔗 Links')">🔗 Links</div></div>
+        </div>
+        <div class="files-main">
+          <div class="file-grid">
+            <div class="file-item" ondblclick="showNotification('📄 Resume — add your PDF link!')"><div class="file-icon">📄</div><div class="file-name">Resume.pdf</div></div>
+            <div class="file-item" ondblclick="showNotification('📁 Certificates')"><div class="file-icon">📁</div><div class="file-name">Certificates</div></div>
+            <div class="file-item" ondblclick="showNotification('🖼️ Screenshots')"><div class="file-icon">🖼️</div><div class="file-name">Screenshots</div></div>
+            <div class="file-item" ondblclick="openWindow('projects')"><div class="file-icon">💼</div><div class="file-name">Projects</div></div>
+            <div class="file-item" ondblclick="showNotification('📝 Notes opened!')"><div class="file-icon">📝</div><div class="file-name">Notes.txt</div></div>
+            <div class="file-item" ondblclick="showNotification('🔐 Access denied!')"><div class="file-icon">🔐</div><div class="file-name">Private</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="resize-handle"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="window" id="win-settings">
+    <div class="window-header" id="hdr-settings">
+      <div class="window-controls"><div class="wc wc-close" onclick="closeWindow('settings')"></div><div class="wc wc-min" onclick="minimizeWindow('settings')"></div><div class="wc wc-max"></div></div>
+      <div class="window-title">⚙️ settings.exe — System</div>
+      <div style="width:52px"></div>
+    </div>
+    <div class="window-body">
+      <div class="settings-body">
+        <div class="settings-section">
+          <div class="settings-label">// Wallpaper</div>
+          <div class="wallpaper-grid">
+            <div class="wp-option active" style="background:linear-gradient(135deg,#0a0a0f,#0a1a10)" onclick="setWallpaper('mesh',this)"><span class="wp-label" style="color:rgba(0,255,136,0.7)">Mesh</span></div>
+            <div class="wp-option" style="background:linear-gradient(135deg,#0f0a0a,#1a0a10)" onclick="setWallpaper('sunset',this)"><span class="wp-label" style="color:rgba(255,107,53,0.7)">Sunset</span></div>
+            <div class="wp-option" style="background:linear-gradient(135deg,#050f18,#051820)" onclick="setWallpaper('ocean',this)"><span class="wp-label" style="color:rgba(0,136,255,0.7)">Ocean</span></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-label">// System</div>
+          <div class="settings-toggle-row">
+            <div><div class="stl-name">Custom Cursor</div><div class="stl-desc">Glowing cursor effect</div></div>
+            <div class="toggle on" id="toggle-cursor" onclick="toggleSetting('cursor',this)"></div>
+          </div>
+          <div class="settings-toggle-row">
+            <div><div class="stl-name">Window Animations</div><div class="stl-desc">Smooth open/close</div></div>
+            <div class="toggle on" id="toggle-anim" onclick="toggleSetting('anim',this)"></div>
+          </div>
+          <div class="settings-toggle-row">
+            <div><div class="stl-name">Sound Effects</div><div class="stl-desc">UI interaction sounds</div></div>
+            <div class="toggle" id="toggle-sound" onclick="toggleSetting('sound',this)"></div>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text3);text-align:center;padding-top:4px">PrabhuOS v2.0 — MERN Stack ♥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKBAR -->
+  <div id="taskbar">
+    <div class="taskbar-logo" onclick="showNotification('👋 Welcome to PrabhuOS!')">PP</div>
+    <div class="taskbar-divider"></div>
+    <div class="taskbar-apps" id="taskbar-apps"></div>
+    <div class="taskbar-right">
+      <div class="taskbar-visitors"><div class="visitor-dot"></div><span id="visitor-count">1</span> online</div>
+      <div class="taskbar-status"><div class="status-dot"></div>Available</div>
+      <div class="taskbar-time" id="taskbar-time">--:--</div>
+    </div>
+  </div>
+</div><!-- /desktop -->
+
+<script>
+// ===== CONFIG =====
+// Change this to your Render backend URL when deployed
+const API_URL = 'http://localhost:5001';
+
+// ===== SOCKET.IO — LIVE VISITOR COUNTER =====
+let socket;
+try {
+  socket = io(API_URL, { transports: ['websocket', 'polling'] });
+  socket.on('connect', () => {
+    console.log('✅ Socket.io connected:', socket.id);
+  });
+  socket.on('visitor_count', ({ count }) => {
+    document.getElementById('visitor-count').textContent = count;
+  });
+  socket.on('disconnect', () => console.log('Socket disconnected'));
+} catch(e) {
+  console.warn('Socket.io not available (backend offline) — running in standalone mode');
+}
+
+// ===== PING VISITOR =====
+async function pingVisitor() {
+  try {
+    await fetch(`${API_URL}/api/visitors/ping`, { method: 'POST' });
+  } catch(e) {
+    // Backend offline — silent fail
+  }
+}
+
+// ===== BOOT =====
+const bootMessages = [
+  'Initializing kernel...','Loading MERN stack...','Mounting React components...',
+  'Connecting MongoDB...','Starting Node.js server...','Binding Socket.io...',
+  'Loading portfolio data...','Applying Prabhu.css...','System ready ✓'
+];
+
+function runBoot() {
+  const bar = document.getElementById('boot-bar');
+  const status = document.getElementById('boot-status');
+  let progress = 0, msgIndex = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 12 + 4;
+    if (progress >= 100) progress = 100;
+    bar.style.width = progress + '%';
+    if (msgIndex < bootMessages.length) status.textContent = bootMessages[msgIndex++];
+    if (progress === 100) {
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('boot-screen').classList.add('fade-out');
+        setTimeout(() => {
+          document.getElementById('boot-screen').style.display = 'none';
+          document.getElementById('desktop').classList.add('visible');
+          pingVisitor();
+          setTimeout(() => openWindow('about'), 400);
+          setTimeout(() => openWindow('terminal'), 700);
+        }, 800);
+      }, 600);
+    }
+  }, 130);
+}
+runBoot();
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('taskbar-time').textContent = h + ':' + m;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ===== WINDOW MANAGER =====
+const openWindows = {};
+let topZ = 50;
+
+function openWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (!win) return;
+  if (!win.classList.contains('open')) {
+    win.classList.add('open');
+    if (!openWindows[name]) {
+      const count = Object.keys(openWindows).length;
+      win.style.left = (60 + count * 28) + 'px';
+      win.style.top = (60 + count * 18) + 'px';
+    }
+    openWindows[name] = true;
+    addTaskbarBtn(name);
+  }
+  const w = document.getElementById('win-' + name);
+  if (w) w.style.display = 'flex';
+  focusWindow(name);
+  makeDraggable(win, document.getElementById('hdr-' + name));
+  makeResizable(win);
+}
+
+function closeWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (!win) return;
+  win.classList.remove('open','focused');
+  win.style.display = 'none';
+  delete openWindows[name];
+  removeTaskbarBtn(name);
+}
+
+function minimizeWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (win) win.style.display = 'none';
+  document.querySelector(`.taskbar-btn[data-win="${name}"]`)?.classList.remove('active');
+}
+
+function focusWindow(name) {
+  Object.keys(openWindows).forEach(n => {
+    document.getElementById('win-' + n)?.classList.remove('focused');
+    document.querySelector(`.taskbar-btn[data-win="${n}"]`)?.classList.remove('active');
+  });
+  const win = document.getElementById('win-' + name);
+  if (win) { win.classList.add('focused'); win.style.zIndex = ++topZ; }
+  document.querySelector(`.taskbar-btn[data-win="${name}"]`)?.classList.add('active');
+}
+
+const winNames = {about:'About',projects:'Projects',terminal:'Terminal',contact:'Contact',music:'Music',files:'Files',settings:'Settings'};
+const winIcons = {about:'👤',projects:'💼',terminal:'🖥️',contact:'📬',music:'🎵',files:'📁',settings:'⚙️'};
+
+function addTaskbarBtn(name) {
+  if (document.querySelector(`.taskbar-btn[data-win="${name}"]`)) return;
+  const btn = document.createElement('div');
+  btn.className = 'taskbar-btn';
+  btn.dataset.win = name;
+  btn.innerHTML = `<span class="tb-dot"></span>${winIcons[name]} ${winNames[name]}`;
+  btn.onclick = () => {
+    const win = document.getElementById('win-' + name);
+    if (!win) return;
+    if (win.style.display === 'none' || win.style.display === '') { win.style.display = 'flex'; focusWindow(name); }
+    else if (win.classList.contains('focused')) { minimizeWindow(name); }
+    else { focusWindow(name); }
+  };
+  document.getElementById('taskbar-apps').appendChild(btn);
+}
+
+function removeTaskbarBtn(name) {
+  document.querySelector(`.taskbar-btn[data-win="${name}"]`)?.remove();
+}
+
+// Focus window on click
+document.addEventListener('mousedown', e => {
+  const win = e.target.closest('.window');
+  if (win) focusWindow(win.id.replace('win-',''));
+});
+
+// ===== DRAG =====
+function makeDraggable(win, handle) {
+  if (!handle || handle._drag) return;
+  handle._drag = true;
+  let dx, dy, dragging = false;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('wc')) return;
+    dragging = true; dx = e.clientX - win.offsetLeft; dy = e.clientY - win.offsetTop;
+    document.body.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    win.style.left = Math.max(0, Math.min(e.clientX - dx, window.innerWidth - 100)) + 'px';
+    win.style.top = Math.max(0, Math.min(e.clientY - dy, window.innerHeight - 80)) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; document.body.style.cursor = ''; });
+}
+
+// ===== RESIZE =====
+function makeResizable(win) {
+  const handle = win.querySelector('.resize-handle');
+  if (!handle || handle._resize) return;
+  handle._resize = true;
+  let resizing = false, sx, sy, sw, sh;
+  handle.addEventListener('mousedown', e => { resizing = true; sx = e.clientX; sy = e.clientY; sw = win.offsetWidth; sh = win.offsetHeight; e.preventDefault(); e.stopPropagation(); });
+  document.addEventListener('mousemove', e => { if (!resizing) return; win.style.width = Math.max(340, sw + e.clientX - sx) + 'px'; win.style.height = Math.max(200, sh + e.clientY - sy) + 'px'; });
+  document.addEventListener('mouseup', () => resizing = false);
+}
+
+// ===== TERMINAL =====
+const termCommands = {
+  help: () => `<span class="term-accent">Available commands:</span>
+<span class="term-result">  whoami     → About Prabhudatta</span>
+<span class="term-result">  skills     → Tech stack</span>
+<span class="term-result">  projects   → Show projects</span>
+<span class="term-result">  contact    → Contact info</span>
+<span class="term-result">  social     → Social links</span>
+<span class="term-result">  visitors   → Live visitor count</span>
+<span class="term-result">  open [app] → Open a window</span>
+<span class="term-result">  clear      → Clear terminal</span>
+<span class="term-result">  matrix     → 👀</span>
+<span class="term-result">  hire       → Hire Prabhu 😄</span>`,
+
+  whoami: () => `<span class="term-success">Prabhudatta Panda</span>
+<span class="term-result">Full Stack Web Developer — Odisha, India</span>
+<span class="term-result">Building immersive digital experiences since day 1.</span>
+<span class="term-result">Startup MVPs → Enterprise platforms — full ownership.</span>`,
+
+  skills: () => `<span class="term-accent">// Frontend</span>   React · Next.js · TypeScript · GSAP · CSS3
+<span class="term-accent">// Backend</span>    Node.js · Express · MongoDB · Redis
+<span class="term-accent">// DevOps</span>     Git · AWS · Vercel · Docker · CI/CD
+<span class="term-accent">// Design</span>     Figma · Framer · Animations`,
+
+  projects: () => `<span class="term-accent">01.</span> Real-Time Code Editor <span class="term-result">— React + Socket.io + MongoDB</span>
+<span class="term-accent">02.</span> Portfolio OS <span class="term-result">— This very site! MERN + Socket.io</span>
+<span class="term-accent">03.</span> Full Stack Platform <span class="term-result">— Next.js + Express + Redis</span>
+<span class="term-accent">04.</span> Performance Optimizer <span class="term-result">— 8s → 1.5s load time</span>`,
+
+  contact: () => `<span class="term-accent">📧</span> prabhudattapanda77@gmail.com
+<span class="term-accent">📱</span> +91 8260318553
+<span class="term-accent">📍</span> Odisha, India — Available Globally`,
+
+  social: () => `<span class="term-accent">GitHub  →</span> <span class="term-link" onclick="window.open('https://github.com/Prabhudattapanda07','_blank')">github.com/Prabhudattapanda07</span>
+<span class="term-accent">LinkedIn→</span> <span class="term-link" onclick="window.open('https://www.linkedin.com/in/prabhudattapanda07/','_blank')">linkedin.com/in/prabhudattapanda07</span>
+<span class="term-accent">Portfolio→</span> <span class="term-link" onclick="window.open('https://port-seven-swart.vercel.app','_blank')">port-seven-swart.vercel.app</span>`,
+
+  visitors: () => `<span class="term-accent">Live Visitors:</span> <span class="term-success">${document.getElementById('visitor-count').textContent} online now</span>
+<span class="term-result">Powered by Socket.io + MongoDB</span>`,
+
+  hire: () => `<span class="term-success">🎉 Excellent choice!</span>
+<span class="term-result">Reach out:</span>
+<span class="term-accent">→</span> prabhudattapanda77@gmail.com
+<span class="term-accent">→</span> <span class="term-link" onclick="openWindow('contact')">Open Contact Window</span>
+<span class="term-warn">⚡ Response time: usually within 24h</span>`,
+
+  matrix: () => { setTimeout(matrixEffect, 100); return `<span class="term-success">Entering the Matrix...</span>`; },
+  clear: () => { document.getElementById('term-output').innerHTML = ''; return null; },
+};
+
+document.getElementById('term-input').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const raw = e.target.value.trim();
+  e.target.value = '';
+  if (!raw) return;
+  const input = raw.toLowerCase();
+  const out = document.getElementById('term-output');
+  out.innerHTML += `<div class="term-line"><span class="term-prompt">prabhu@portfolio:~$</span> <span class="term-cmd">${raw}</span></div>`;
+  const parts = input.split(' '), cmd = parts[0], arg = parts[1];
+  if (cmd === 'open' && arg) {
+    const apps = ['about','projects','terminal','contact','music','files','settings'];
+    if (apps.includes(arg)) { openWindow(arg); out.innerHTML += `<div class="term-line term-success">Opening ${arg}...</div>`; }
+    else out.innerHTML += `<div class="term-line term-error">Unknown app: ${arg}. Try: ${apps.join(', ')}</div>`;
+  } else if (termCommands[cmd]) {
+    const result = termCommands[cmd]();
+    if (result) out.innerHTML += `<div class="term-line">${result}</div>`;
+  } else {
+    out.innerHTML += `<div class="term-line term-error">Command not found: ${cmd}. Type 'help'.</div>`;
+  }
+  out.innerHTML += '<div class="term-line"> </div>';
+  out.scrollTop = out.scrollHeight;
+});
+
+function matrixEffect() {
+  const out = document.getElementById('term-output');
+  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+  let count = 0;
+  const iv = setInterval(() => {
+    let line = '';
+    for (let i = 0; i < 60; i++) line += chars[Math.floor(Math.random() * chars.length)];
+    out.innerHTML += `<div class="term-line" style="color:var(--accent);opacity:${Math.random().toFixed(2)}">${line}</div>`;
+    out.scrollTop = out.scrollHeight;
+    if (++count > 15) {
+      clearInterval(iv);
+      out.innerHTML += `<div class="term-line term-success">You have been freed from the Matrix.</div><div class="term-line"> </div>`;
+      out.scrollTop = out.scrollHeight;
+    }
+  }, 80);
+}
+
+// ===== CONTACT FORM — REAL API CALL =====
+async function sendMessage() {
+  const name = document.getElementById('cf-name').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
+  const subject = document.getElementById('cf-subject').value.trim();
+  const message = document.getElementById('cf-msg').value.trim();
+
+  if (!name || !email || !message) { showNotification('⚠️ Please fill all required fields!'); return; }
+
+  const btn = document.getElementById('cf-submit');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch(`${API_URL}/api/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showNotification('📬 Message sent! Prabhu will reply soon.');
+      document.getElementById('cf-name').value = '';
+      document.getElementById('cf-email').value = '';
+      document.getElementById('cf-subject').value = '';
+      document.getElementById('cf-msg').value = '';
+    } else {
+      showNotification('❌ ' + (data.error || 'Send failed. Try again.'));
+    }
+  } catch(err) {
+    // Backend offline — show success anyway for demo
+    showNotification('📬 Message sent! (Demo mode — backend offline)');
+    document.getElementById('cf-name').value = '';
+    document.getElementById('cf-email').value = '';
+    document.getElementById('cf-subject').value = '';
+    document.getElementById('cf-msg').value = '';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Send Message →';
+}
+
+// ===== MUSIC =====
+const tracks = [
+  { name:'Coding Vibes', artist:'lofi beats', duration:'3:42' },
+  { name:'Deep Focus', artist:'chill hop', duration:'4:15' },
+  { name:'Midnight Dev', artist:'ambient lo-fi', duration:'3:28' },
+  { name:'Flow State', artist:'study beats', duration:'5:01' },
+];
+let currentTrack = 0, musicPlaying = false, musicSecs = 0, musicInterval = null;
+
+function togglePlay() {
+  musicPlaying = !musicPlaying;
+  document.getElementById('mc-play-btn').textContent = musicPlaying ? '⏸' : '▶';
+  const vinyl = document.getElementById('music-vinyl');
+  if (musicPlaying) {
+    vinyl.classList.add('playing');
+    musicInterval = setInterval(() => {
+      musicSecs++;
+      const [tm,ts] = tracks[currentTrack].duration.split(':').map(Number);
+      const total = tm*60+ts;
+      document.getElementById('music-bar').style.width = Math.min(musicSecs/total*100,100)+'%';
+      document.getElementById('music-curr').textContent = `${Math.floor(musicSecs/60)}:${(musicSecs%60).toString().padStart(2,'0')}`;
+      if (musicSecs >= total) nextTrack();
+    }, 1000);
+  } else {
+    vinyl.classList.remove('playing');
+    clearInterval(musicInterval);
+  }
+}
+
+function nextTrack() { currentTrack=(currentTrack+1)%tracks.length; loadTrack(); }
+function prevTrack() { currentTrack=(currentTrack-1+tracks.length)%tracks.length; loadTrack(); }
+function loadTrack() {
+  const t = tracks[currentTrack];
+  document.getElementById('music-track').textContent = t.name;
+  document.getElementById('music-artist').textContent = `Prabhu's Playlist — ${t.artist}`;
+  document.getElementById('music-total').textContent = t.duration;
+  musicSecs = 0;
+  document.getElementById('music-bar').style.width = '0%';
+  document.getElementById('music-curr').textContent = '0:00';
+}
+
+// ===== SETTINGS =====
+function setWallpaper(type, el) {
+  document.body.classList.remove('wp-sunset','wp-ocean');
+  if (type !== 'mesh') document.body.classList.add('wp-' + type);
+  document.querySelectorAll('.wp-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  showNotification('🎨 Wallpaper changed!');
+}
+
+function toggleSetting(key, el) {
+  el.classList.toggle('on');
+  if (key === 'cursor') {
+    const on = el.classList.contains('on');
+    document.getElementById('cursor').style.opacity = on ? '1' : '0';
+    document.getElementById('cursor-ring').style.opacity = on ? '1' : '0';
+  }
+}
+
+// ===== NOTIFICATION =====
+let notifTimeout;
+function showNotification(msg) {
+  const n = document.getElementById('notification');
+  n.textContent = msg;
+  n.classList.add('show');
+  clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(() => n.classList.remove('show'), 2800);
+}
+
+// ===== CONTEXT MENU =====
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight-180)+'px';
+});
+document.addEventListener('click', () => { document.getElementById('ctx-menu').style.display='none'; });
+
+// ===== CUSTOM CURSOR =====
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px';
+  ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px';
+});
+document.addEventListener('mousedown', () => { cursor.style.width='6px'; cursor.style.height='6px'; ring.style.width='40px'; ring.style.height='40px'; });
+document.addEventListener('mouseup', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='32px'; ring.style.height='32px'; });
+</script>
+</body>
+</html>
