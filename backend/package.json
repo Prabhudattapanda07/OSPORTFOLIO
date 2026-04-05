@@ -4,6 +4,10 @@
   "description": "Backend for PrabhuOS Portfolio",
   "main": "server.js",
   "scripts": {
+    "generate:audio": "node ../scripts/generate-audio-tracks.js",
+    "audio:watch": "node ../scripts/generate-audio-tracks.js --watch",
+    "prestart": "node ../scripts/generate-audio-tracks.js",
+    "predev": "node ../scripts/generate-audio-tracks.js",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },

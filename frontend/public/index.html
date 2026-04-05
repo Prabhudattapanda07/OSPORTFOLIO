@@ -902,6 +902,7 @@
   </div>
 </div><!-- /desktop -->
 
+<script src="audio/tracks.js"></script>
 <script>
 // ===== CONFIG =====
 // Change this to your Render backend URL when deployed
@@ -1216,12 +1217,9 @@ async function sendMessage() {
 }
 
 // ===== MUSIC =====
-const tracks = [
-  { name:'Coding Vibes', artist:'lofi beats', src:'audio/coding-vibes.wav' },
-  { name:'Deep Focus', artist:'chill hop', src:'audio/deep-focus.wav' },
-  { name:'Midnight Dev', artist:'ambient lo-fi', src:'audio/midnight-dev.wav' },
-  { name:'Flow State', artist:'study beats', src:'audio/flow-state.wav' },
-];
+const tracks = Array.isArray(window.__MUSIC_TRACKS__) && window.__MUSIC_TRACKS__.length
+  ? window.__MUSIC_TRACKS__
+  : [];
 const audio = document.getElementById('music-audio');
 const musicBar = document.getElementById('music-bar');
 const musicCurr = document.getElementById('music-curr');
@@ -1232,7 +1230,16 @@ const musicPlayBtn = document.getElementById('mc-play-btn');
 const vinyl = document.getElementById('music-vinyl');
 let currentTrack = 0;
 
+function hasTracks() {
+  if (!tracks.length) {
+    showNotification('No audio files found in /audio');
+    return false;
+  }
+  return true;
+}
+
 function togglePlay() {
+  if (!hasTracks()) return;
   if (!audio.src) loadTrack();
   if (audio.paused) {
     audio.play().catch(() => showNotification('🔇 Tap play to start audio'));
@@ -1242,10 +1249,12 @@ function togglePlay() {
 }
 
 function nextTrack(autoplay = !audio.paused) {
+  if (!hasTracks()) return;
   currentTrack = (currentTrack + 1) % tracks.length;
   loadTrack(autoplay);
 }
 function prevTrack(autoplay = !audio.paused) {
+  if (!hasTracks()) return;
   currentTrack = (currentTrack - 1 + tracks.length) % tracks.length;
   loadTrack(autoplay);
 }
@@ -1275,6 +1284,7 @@ function buildQueue() {
   setActiveTrack();
 }
 function loadTrack(autoplay = false) {
+  if (!hasTracks()) return;
   const t = tracks[currentTrack];
   document.getElementById('music-track').textContent = t.name;
   document.getElementById('music-artist').textContent = `Prabhu's Playlist — ${t.artist}`;
